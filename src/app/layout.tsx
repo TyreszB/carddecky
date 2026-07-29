@@ -39,8 +39,8 @@ export default function RootLayout({
             </span>
             <div className="flex items-center gap-3">
               <Show when="signed-out">
-                <SignInButton />
-                <SignUpButton />
+                <SignInButton mode="modal" />
+                <SignUpButton mode="modal" />
               </Show>
               <Show when="signed-in">
                 <UserButton />
