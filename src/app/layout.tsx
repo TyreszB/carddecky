@@ -2,12 +2,13 @@ import {
   ClerkProvider,
   Show,
   SignInButton,
+  SignOutButton,
   SignUpButton,
-  UserButton,
 } from "@clerk/nextjs";
-import { shadcn } from "@clerk/ui/themes";
+import { dark, shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { Button } from "@/components/ui/button";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -32,18 +33,24 @@ export default function RootLayout({
       className={`dark ${poppins.variable} ${poppins.className} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider appearance={{ theme: shadcn }}>
+        <ClerkProvider appearance={{ theme: [dark, shadcn] }}>
           <header className="flex items-center justify-between border-b border-border px-6 py-4">
             <span className="text-lg font-semibold tracking-tight">
               CardDecky
             </span>
             <div className="flex items-center gap-3">
               <Show when="signed-out">
-                <SignInButton mode="modal" />
-                <SignUpButton mode="modal" />
+                <SignInButton mode="modal">
+                  <Button variant="outline">Sign in</Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button>Sign up</Button>
+                </SignUpButton>
               </Show>
               <Show when="signed-in">
-                <UserButton />
+                <SignOutButton>
+                  <Button variant="outline">Sign out</Button>
+                </SignOutButton>
               </Show>
             </div>
           </header>
