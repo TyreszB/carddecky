@@ -1,0 +1,17 @@
+---
+description: Enforce Clerk auth and per-user data isolation on every query, Server Action, and Route Handler
+alwaysApply: true
+---
+
+# Clerk Data Isolation
+
+All auth is handled by Clerk — there is no local `users` table. A signed-in user must only ever read or mutate rows they own.
+
+- Get `userId` from `auth()` (`@clerk/nextjs/server`) inside the Server Action / Route Handler / Server Component itself. Never trust a client-supplied user ID (form field, JSON body, query param, prop).
+- `src/proxy.ts` (Clerk middleware) only gates which routes require a session — it does not check row-level ownership. Re-verify ownership in every Server Action and Route Handler, even if a parent page/layout already checked.
+- Scope every query by ownership, not just by primary key. `decks.userId` is direct; `cards` has no `userId` column — ownership is transitive via `cards.deckId -> decks.id -> decks.userId`, so card queries/mutations must join or verify through the parent deck.
+- Put the ownership check inside the mutation's `where` clause (e.g. `and(eq(decks.id, deckId), eq(decks.userId, userId))`), not as a separate check-then-act step — this avoids IDOR/TOCTOU bugs.
+- Treat "not owned" exactly like "not found" (404). Never return 403/"forbidden," since that confirms the row exists.
+- Insert `userId` from `auth()` on create, never from the request payload.
+
+For full query/mutation code patterns and anti-patterns, see `.cursor/skills/clerk-data-isolation/SKILL.md`.
