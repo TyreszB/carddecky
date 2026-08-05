@@ -2,8 +2,8 @@ import {
   ClerkProvider,
   Show,
   SignInButton,
-  SignOutButton,
   SignUpButton,
+  UserButton,
 } from "@clerk/nextjs";
 import { dark, shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
@@ -48,9 +48,7 @@ export default function RootLayout({
                 </SignUpButton>
               </Show>
               <Show when="signed-in">
-                <SignOutButton>
-                  <Button variant="outline">Sign out</Button>
-                </SignOutButton>
+                <UserButton />
               </Show>
             </div>
           </header>
