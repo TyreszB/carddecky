@@ -1,0 +1,29 @@
+---
+description: Enforce Drizzle ORM for all database reads, writes, schema changes, and migrations
+alwaysApply: true
+---
+
+# Drizzle Database
+
+All database interactions must use the Drizzle schema and query API.
+
+- All DB access goes through Drizzle — import `db` from `@/db` and use `db.select` / `db.insert` / `db.update` / `db.delete` / `db.query.*`.
+- Schema is the source of truth — tables, columns, and relations live only in `src/db/schema.ts`. Do not invent parallel types or raw table definitions elsewhere.
+- Never use raw SQL clients for app queries — no direct `neon()` / `sql` template CRUD, no `pg`/`postgres.js` query strings, no ad-hoc SQL in routes or actions.
+- Schema changes require Drizzle Kit — edit `src/db/schema.ts`, then run `db:generate` / `db:migrate` or `db:push`. Do not hand-edit production SQL outside the Drizzle workflow unless fixing a generated migration.
+- Auth stays in Clerk — `userId` on `decks` is a Clerk user ID string; there is no local users table.
+
+| Path | Role |
+|------|------|
+| `src/db/schema.ts` | Tables + relations |
+| `src/db/index.ts` | `db` client (`drizzle-orm/neon-http` + schema) |
+| `drizzle.config.ts` | Drizzle Kit config (`schema`, `out: ./drizzle`) |
+
+```ts
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { decks, cards } from "@/db/schema";
+
+const userDecks = await db.select().from(decks).where(eq(decks.userId, userId));
+await db.insert(cards).values({ deckId, front, back, position });
+```

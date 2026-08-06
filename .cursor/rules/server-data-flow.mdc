@@ -1,0 +1,31 @@
+---
+description: Reads in Server Components, writes in Server Actions, Zod-validated typed inputs (never FormData)
+alwaysApply: true
+---
+
+# Server Data Flow
+
+Reads happen in Server Components. Inserts/updates/deletes happen in Server Actions. Server Action inputs are typed and validated with Zod — never `FormData`.
+
+- Fetch data directly inside an `async` Server Component (`page.tsx`, `layout.tsx`, or server-only child). Pass resolved data as props to Client Components.
+- Never fetch initial data from the client (`useEffect` + `fetch`, SWR/React Query against your own API) when a Server Component could load it.
+- Every insert/update/delete is a `"use server"` function. Never call `db.insert` / `db.update` / `db.delete` from a Client Component or client-triggered `fetch`.
+- Server Action parameters use an explicit TypeScript type (`z.infer<typeof schema>`). Do not type a parameter as `FormData` — build the typed object on the caller side and pass that in.
+- Validate every Server Action input with Zod (`parse`/`safeParse`) before touching Drizzle. Zod checks shape only — it does not replace ownership checks.
+- Route Handlers are not for app CRUD — reserve `route.ts` for webhooks, external API consumers, or GETs the app itself must `fetch()`. Client-triggered DB writes use Server Actions.
+- Every Server Action still calls `auth()` and scopes mutations by `userId` (see clerk-data-isolation).
+- After a mutation, call `revalidatePath`/`revalidateTag` (or `redirect`) so the owning Server Component re-fetches. Don't hand-patch client state.
+
+```ts
+"use server";
+const createDeckSchema = z.object({ title: z.string().trim().min(1).max(120) });
+type CreateDeckInput = z.infer<typeof createDeckSchema>;
+
+export async function createDeck(input: CreateDeckInput) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  const { title } = createDeckSchema.parse(input);
+  await db.insert(decks).values({ userId, title });
+  revalidatePath("/decks");
+}
+```

@@ -1,0 +1,47 @@
+---
+description: ONLY shadcn/ui for all UI; no custom UI; Clerk auth uses shadcn buttons + modal
+alwaysApply: true
+---
+
+# shadcn/ui — exclusive UI system
+
+This project uses [shadcn/ui](https://ui.shadcn.com) as the **only** UI system. **ABSOLUTELY NO custom UI** — no hand-rolled buttons, inputs, dialogs, forms, menus, cards, or other primitives. No alternate UI libraries. If it is interactive or presentational chrome, it must be a shadcn component from `@/components/ui/...`.
+
+## Hard rules
+
+- **Only** components from the configured shadcn UI directory (see `components.json`, typically `@/components/ui/...`).
+- **Never** invent parallel components, copy-paste one-off UI primitives, or style raw `<button>` / `<input>` / `<dialog>` as a substitute for shadcn.
+- If a needed component is missing, add it with the CLI — do not hand-roll it.
+- Do not reinstall or overwrite an existing component unless explicitly asked.
+- Do not use `npx shadcn@latest add --all` unless explicitly requested.
+
+## Not initialized
+
+If `components.json` is missing, install via [https://ui.shadcn.com/docs](https://ui.shadcn.com/docs) (`npx shadcn@latest init`). Do not invent a parallel component system.
+
+## Missing component
+
+```bash
+npx shadcn@latest add button
+# or multiple: npx shadcn@latest add button card dialog input
+```
+
+## Clerk sign-in / sign-up
+
+Clerk auth entry points **must** use shadcn `Button` triggers and **must** open via Clerk **modal** mode — never redirect-only Clerk buttons with default styling, and never custom-styled auth buttons.
+
+```tsx
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+
+<SignInButton mode="modal">
+  <Button variant="outline">Sign in</Button>
+</SignInButton>
+<SignUpButton mode="modal">
+  <Button>Sign up</Button>
+</SignUpButton>
+```
+
+- Always `mode="modal"` on `SignInButton` / `SignUpButton`.
+- Always wrap a shadcn `Button` (or another existing shadcn trigger) as the child — do not rely on Clerk’s default button chrome.
+- Prefer Clerk’s shadcn-compatible appearance theme when configuring `ClerkProvider` (e.g. `appearance={{ theme: [dark, shadcn] }}` from `@clerk/ui/themes`) so modal content stays visually aligned.

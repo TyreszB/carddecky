@@ -5,13 +5,23 @@ alwaysApply: true
 
 # Clerk Data Isolation
 
-All auth is handled by Clerk — there is no local `users` table. A signed-in user must only ever read or mutate rows they own.
+All auth is handled by Clerk — there is no local `users` table. A signed-in user must only ever read or mutate rows they own. Every server-side entry point is a public network boundary and must independently verify ownership.
 
 - Get `userId` from `auth()` (`@clerk/nextjs/server`) inside the Server Action / Route Handler / Server Component itself. Never trust a client-supplied user ID (form field, JSON body, query param, prop).
-- `src/proxy.ts` (Clerk middleware) only gates which routes require a session — it does not check row-level ownership. Re-verify ownership in every Server Action and Route Handler, even if a parent page/layout already checked.
-- Scope every query by ownership, not just by primary key. `decks.userId` is direct; `cards` has no `userId` column — ownership is transitive via `cards.deckId -> decks.id -> decks.userId`, so card queries/mutations must join or verify through the parent deck.
-- Put the ownership check inside the mutation's `where` clause (e.g. `and(eq(decks.id, deckId), eq(decks.userId, userId))`), not as a separate check-then-act step — this avoids IDOR/TOCTOU bugs.
-- Treat "not owned" exactly like "not found" (404). Never return 403/"forbidden," since that confirms the row exists.
+- `src/proxy.ts` only gates which routes require a session — it does not check row-level ownership. Re-verify in every Server Action and Route Handler, even if a parent page/layout already checked.
+- Scope every query by ownership, not just by primary key. Put the ownership check inside the mutation's `where` clause (e.g. `and(eq(decks.id, deckId), eq(decks.userId, userId))`), not as a separate check-then-act step.
+- `decks.userId` is direct; `cards` has no `userId` — ownership is transitive via `cards.deckId -> decks.id -> decks.userId`. Card queries/mutations must join or verify through the parent deck.
+- Unauthenticated → 401/redirect. Authenticated-but-not-owner → 404, not 403. Never confirm another user's row exists.
 - Insert `userId` from `auth()` on create, never from the request payload.
+- Return only the fields the client needs — don't return whole Drizzle rows if they might grow sensitive columns later.
 
-For full query/mutation code patterns and anti-patterns, see `.cursor/skills/clerk-data-isolation/SKILL.md`.
+```ts
+const { userId } = await auth();
+if (!userId) throw new Error("Unauthorized");
+
+const [deleted] = await db
+  .delete(decks)
+  .where(and(eq(decks.id, deckId), eq(decks.userId, userId)))
+  .returning({ id: decks.id });
+if (!deleted) throw new Error("Not found");
+```
