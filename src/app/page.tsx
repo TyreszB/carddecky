@@ -1,4 +1,4 @@
-import { SignInButton, SignOutButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,11 @@ export default async function Home() {
       </div>
       <div className="flex items-center gap-3">
         <SignInButton mode="modal">
-          <Button variant="outline">Sign in</Button>
+          <Button variant="outline">Sign In</Button>
         </SignInButton>
-        <SignOutButton>
-          <Button>Sign out</Button>
-        </SignOutButton>
+        <SignUpButton mode="modal">
+          <Button>Sign Up</Button>
+        </SignUpButton>
       </div>
     </div>
   );
