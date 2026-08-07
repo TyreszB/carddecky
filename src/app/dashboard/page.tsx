@@ -1,8 +1,19 @@
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import { Plus } from "lucide-react";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { decks } from "@/db/schema";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -16,38 +27,52 @@ export default async function DashboardPage() {
     .where(eq(decks.userId, userId));
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Your flashcard decks, all in one place.
-        </p>
-      </div>
+    <div className="flex flex-1 flex-col items-center gap-8 px-6 py-10">
+      <p className="text-center text-muted-foreground">
+        Manage your flashcard decks and study progress
+      </p>
 
       {userDecks.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
-          <p className="text-lg font-medium">No decks yet</p>
-          <p className="text-muted-foreground">
-            Create your first deck to start studying.
-          </p>
-        </div>
+        <Card className="w-full max-w-md border-dashed py-16 text-center shadow-none [--card-spacing:--spacing(6)]">
+          <CardHeader>
+            <CardTitle className="text-lg">No decks yet</CardTitle>
+            <CardDescription>
+              Create your first deck to start studying.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2">
           {userDecks.map((deck) => (
-            <div
-              key={deck.id}
-              className="flex flex-col gap-2 rounded-lg border border-border p-4"
-            >
-              <h2 className="font-semibold">{deck.title}</h2>
-              {deck.description ? (
-                <p className="text-sm text-muted-foreground">
-                  {deck.description}
-                </p>
-              ) : null}
-            </div>
+            <Card key={deck.id} className="gap-4 [--card-spacing:--spacing(6)]">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold leading-snug">
+                  {deck.title}
+                </CardTitle>
+                {deck.description ? (
+                  <CardDescription>{deck.description}</CardDescription>
+                ) : null}
+                <CardAction>
+                  <Badge variant="secondary">
+                    {deck.createdAt.toLocaleDateString("en-US")}
+                  </Badge>
+                </CardAction>
+              </CardHeader>
+              <CardFooter className="justify-between bg-transparent">
+                <span className="text-sm text-muted-foreground">
+                  Ready to study
+                </span>
+                <Button>Study</Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
+
+      <Button variant="outline" size="lg">
+        <Plus data-icon="inline-start" />
+        Create New Deck
+      </Button>
     </div>
   );
 }
