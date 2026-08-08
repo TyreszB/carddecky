@@ -1,14 +1,11 @@
-import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { Plus } from "lucide-react";
 import { redirect } from "next/navigation";
-import { db } from "@/db";
-import { decks } from "@/db/schema";
+import { listDecksForUser } from "@/db/queries";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -21,10 +18,7 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const userDecks = await db
-    .select()
-    .from(decks)
-    .where(eq(decks.userId, userId));
+  const userDecks = await listDecksForUser(userId);
 
   return (
     <div className="flex flex-1 flex-col items-center gap-8 px-6 py-10">
@@ -42,31 +36,34 @@ export default async function DashboardPage() {
           </CardHeader>
         </Card>
       ) : (
-        <div className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           {userDecks.map((deck) => (
-            <Card key={deck.id} className="gap-4 [--card-spacing:--spacing(6)]">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold leading-snug">
-                  {deck.title}
-                </CardTitle>
-                {deck.description ? (
-                  <CardDescription>{deck.description}</CardDescription>
-                ) : null}
-                <CardAction>
+            <a
+              href={`/decks/${deck.id}`}
+              key={deck.id}
+              className="mx-auto flex w-[300px] h-[420px] flex-col"
+              style={{ textDecoration: "none" }}
+            >
+              <Card className="flex flex-1 flex-col h-full">
+                <CardHeader className="w-full text-center flex-1">
+                  <CardTitle className="text-xl font-semibold leading-snug break-words">
+                    {deck.title}
+                  </CardTitle>
+                  {deck.description ? (
+                    <CardDescription>{deck.description}</CardDescription>
+                  ) : null}
+                </CardHeader>
+                <div className="flex-1" /> {/* Spacer to fill the body and push footer down */}
+                <CardFooter className="flex flex-col gap-3 items-center mt-auto bg-transparent w-full">
                   <Badge variant="secondary">
-                    {deck.createdAt.toLocaleDateString("en-US")}
+                    Last updated: {new Date(deck.createdAt).toLocaleDateString("en-US")}
                   </Badge>
-                </CardAction>
-              </CardHeader>
-              <CardFooter className="justify-between bg-transparent">
-                <span className="text-sm text-muted-foreground">
-                  Ready to study
-                </span>
-                <Button>Study</Button>
-              </CardFooter>
-            </Card>
+                </CardFooter>
+              </Card>
+            </a>
           ))}
-        </div>
+     
+          </div>
       )}
 
       <Button variant="outline" size="lg">
