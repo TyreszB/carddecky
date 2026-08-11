@@ -29,3 +29,20 @@ export async function getDeckForUser(userId: string, deckId: string) {
 
   return deck ?? null;
 }
+
+export async function updateDeckForUser(
+  userId: string,
+  deckId: string,
+  data: { title: string; description: string | null },
+) {
+  const [updated] = await db
+    .update(decks)
+    .set({
+      title: data.title,
+      description: data.description,
+    })
+    .where(and(eq(decks.id, deckId), eq(decks.userId, userId)))
+    .returning({ id: decks.id });
+
+  return updated ?? null;
+}

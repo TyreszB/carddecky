@@ -1,2 +1,6 @@
 export { listCardsForUserDeck } from "./cards";
-export { getDeckForUser, listDecksForUser } from "./decks";
+export {
+  getDeckForUser,
+  listDecksForUser,
+  updateDeckForUser,
+} from "./decks";

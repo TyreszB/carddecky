@@ -1,16 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import {
-  ArrowLeft,
-  Layers,
-  Pencil,
-  Play,
-  Plus,
-  Settings,
-  SquarePen,
-} from "lucide-react";
+import { ArrowLeft, Layers, Play, Plus, SquarePen } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDeckForUser, listCardsForUserDeck } from "@/db/queries";
+import { EditDeckDialog } from "@/components/edit-deck-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,13 +85,11 @@ export default async function DeckPage({
               data-slot="card-action"
               className="col-start-2 row-span-2 row-start-1 flex items-start gap-2 self-start justify-self-end"
             >
-              <Button variant="outline" size="sm">
-                <Pencil data-icon="inline-start" />
-                Edit
-              </Button>
-              <Button variant="outline" size="icon-sm" aria-label="Settings">
-                <Settings />
-              </Button>
+              <EditDeckDialog
+                deckId={deck.id}
+                title={deck.title}
+                description={deck.description}
+              />
             </div>
           </CardHeader>
 
