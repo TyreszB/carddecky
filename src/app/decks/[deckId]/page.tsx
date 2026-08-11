@@ -1,5 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeft, Layers } from "lucide-react";
+import {
+  ArrowLeft,
+  Layers,
+  Pencil,
+  Play,
+  Plus,
+  Settings,
+  SquarePen,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDeckForUser, listCardsForUserDeck } from "@/db/queries";
@@ -7,9 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -20,7 +28,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@/components/ui/progress";
 
 export default async function DeckPage({
   params,
@@ -42,64 +54,132 @@ export default async function DeckPage({
     notFound();
   }
 
+  const cardCount = deckCards.length;
+  const studyProgress = 0;
+
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-10">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <Button variant="ghost" size="sm" className="w-fit" render={<Link href="/dashboard" />}>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          render={<Link href="/dashboard" />}
+        >
           <ArrowLeft data-icon="inline-start" />
-          Back to dashboard
+          Back to Dashboard
         </Button>
 
-        <Card>
+        <Card className="[--card-spacing:--spacing(6)]">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold tracking-tight">
               {deck.title}
             </CardTitle>
             {deck.description ? (
-              <CardDescription>{deck.description}</CardDescription>
+              <CardDescription className="text-base">
+                {deck.description}
+              </CardDescription>
             ) : null}
-            <CardDescription>
-              Updated {new Date(deck.updatedAt).toLocaleDateString("en-US")}
-            </CardDescription>
-            <CardAction>
+            <div className="col-span-full mt-2 flex flex-wrap gap-2">
               <Badge variant="secondary">
-                {deckCards.length} {deckCards.length === 1 ? "card" : "cards"}
+                {cardCount} {cardCount === 1 ? "card" : "cards"}
               </Badge>
-            </CardAction>
+              <Badge variant="secondary">
+                Created {new Date(deck.createdAt).toLocaleDateString("en-US")}
+              </Badge>
+            </div>
+            <div
+              data-slot="card-action"
+              className="col-start-2 row-span-2 row-start-1 flex items-start gap-2 self-start justify-self-end"
+            >
+              <Button variant="outline" size="sm">
+                <Pencil data-icon="inline-start" />
+                Edit
+              </Button>
+              <Button variant="outline" size="icon-sm" aria-label="Settings">
+                <Settings />
+              </Button>
+            </div>
           </CardHeader>
+
+          <CardContent className="flex flex-col gap-6">
+            <Progress value={studyProgress} className="w-full flex-col gap-2">
+              <div className="flex w-full items-center justify-between gap-3">
+                <ProgressLabel>Study Progress</ProgressLabel>
+                <ProgressValue className="ml-0" />
+              </div>
+            </Progress>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                size="lg"
+                className="flex-1"
+                disabled={cardCount === 0}
+              >
+                <Play data-icon="inline-start" />
+                Start Study Session
+              </Button>
+              <Button variant="outline" size="lg">
+                <Plus data-icon="inline-start" />
+                Add Card
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
-        <Separator />
-
-        {deckCards.length === 0 ? (
-          <Empty className="border border-dashed">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Layers />
-              </EmptyMedia>
-              <EmptyTitle>No cards yet</EmptyTitle>
-              <EmptyDescription>
-                Add flashcards to this deck to start studying.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {deckCards.map((card, index) => (
-              <Card key={card.id}>
-                <CardHeader className="border-b">
-                  <CardDescription>Card {index + 1}</CardDescription>
-                  <CardTitle className="text-base font-medium">
-                    {card.front}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-(--card-spacing)">
-                  <CardDescription>{card.back}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold tracking-tight">Cards</h2>
+            <Button variant="outline" size="sm">
+              <Plus data-icon="inline-start" />
+              Add Card
+            </Button>
           </div>
-        )}
+
+          {cardCount === 0 ? (
+            <Empty className="border border-dashed">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Layers />
+                </EmptyMedia>
+                <EmptyTitle>No cards yet</EmptyTitle>
+                <EmptyDescription>
+                  Add flashcards to this deck to start studying.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {deckCards.map((card, index) => (
+                <Card key={card.id} className="h-full">
+                  <CardHeader className="gap-0">
+                    <CardDescription>Card #{index + 1}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium">Front</span>
+                      <div className="rounded-lg bg-muted px-3 py-2.5 text-sm">
+                        {card.front}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium">Back</span>
+                      <div className="rounded-lg bg-muted px-3 py-2.5 text-sm">
+                        {card.back}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t-0 bg-transparent">
+                    <Button variant="outline" className="w-full">
+                      <SquarePen data-icon="inline-start" />
+                      Edit
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
