@@ -21,11 +21,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Progress,
-  ProgressLabel,
-  ProgressValue,
-} from "@/components/ui/progress";
 
 export default async function DeckPage({
   params,
@@ -48,7 +43,6 @@ export default async function DeckPage({
   }
 
   const cardCount = deckCards.length;
-  const studyProgress = 0;
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-10">
@@ -93,28 +87,11 @@ export default async function DeckPage({
             </div>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-6">
-            <Progress value={studyProgress} className="w-full flex-col gap-2">
-              <div className="flex w-full items-center justify-between gap-3">
-                <ProgressLabel>Study Progress</ProgressLabel>
-                <ProgressValue className="ml-0" />
-              </div>
-            </Progress>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                className="flex-1"
-                disabled={cardCount === 0}
-              >
-                <Play data-icon="inline-start" />
-                Start Study Session
-              </Button>
-              <Button variant="outline" size="lg">
-                <Plus data-icon="inline-start" />
-                Add Card
-              </Button>
-            </div>
+          <CardContent>
+            <Button size="lg" className="w-full" disabled={cardCount === 0}>
+              <Play data-icon="inline-start" />
+              Start Study Session
+            </Button>
           </CardContent>
         </Card>
 
