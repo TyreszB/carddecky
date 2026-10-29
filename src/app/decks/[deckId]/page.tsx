@@ -1,8 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeft, Layers, Play, Plus, SquarePen } from "lucide-react";
+import { ArrowLeft, Layers, Play } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDeckForUser, listCardsForUserDeck } from "@/db/queries";
+import { AddCardDialog } from "@/components/add-card-dialog";
+import { DeleteCardDialog } from "@/components/delete-card-dialog";
+import { EditCardDialog } from "@/components/edit-card-dialog";
 import { EditDeckDialog } from "@/components/edit-deck-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,10 +101,7 @@ export default async function DeckPage({
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-xl font-semibold tracking-tight">Cards</h2>
-            <Button variant="outline" size="sm">
-              <Plus data-icon="inline-start" />
-              Add Card
-            </Button>
+            <AddCardDialog deckId={deck.id} />
           </div>
 
           {cardCount === 0 ? (
@@ -118,11 +118,8 @@ export default async function DeckPage({
             </Empty>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {deckCards.map((card, index) => (
+              {deckCards.map((card) => (
                 <Card key={card.id} className="h-full">
-                  <CardHeader className="gap-0">
-                    <CardDescription>Card #{index + 1}</CardDescription>
-                  </CardHeader>
                   <CardContent className="flex flex-1 flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
                       <span className="text-sm font-medium">Front</span>
@@ -137,11 +134,14 @@ export default async function DeckPage({
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t-0 bg-transparent">
-                    <Button variant="outline" className="w-full">
-                      <SquarePen data-icon="inline-start" />
-                      Edit
-                    </Button>
+                  <CardFooter className="gap-2 border-t-0 bg-transparent">
+                    <EditCardDialog
+                      deckId={deck.id}
+                      cardId={card.id}
+                      front={card.front}
+                      back={card.back}
+                    />
+                    <DeleteCardDialog deckId={deck.id} cardId={card.id} />
                   </CardFooter>
                 </Card>
               ))}
